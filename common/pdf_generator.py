@@ -32,6 +32,8 @@ from dateutil.relativedelta import *
 import datetime
 import time
 import sys
+import os
+
 
 class PDF(FPDF):
 
@@ -90,13 +92,14 @@ class PDF(FPDF):
 
 
 def generate_pdf(data):
-    fileName = data['directory'] + data['prefix'] + data['userid'] + '.pdf'
+    fileName =  data['prefix'] + data['userid'] + '.pdf'
     pdf = PDF(data['logo'], data['company'], data['company-address-1'], data['company-address-2'])
     pdf.alias_nb_pages()
     pdf.add_page()
     pdf.set_font('Arial', 'B', 16)
-    pdf.cell(140, 10, 'ICCLab External Cloud Usage Bill for month:', 0, 0, 'L')
-    month_value = '%s-%d' % (data['bill-month'], data['bill-year'])
+    pdf.cell(140, 10, 'ICCLab External Cloud Usage Bill for period:', 0, 0, 'L')
+    pdf.set_font('Arial', 'B', 12)
+    month_value = '%s - %s' % (data['bill-start'], data['bill-end'])
     pdf.cell(50, 10, month_value, 1, 0, 'R')
     pdf.ln(20)
     pdf.set_font('Times', 'B', 12)
@@ -111,17 +114,21 @@ def generate_pdf(data):
     ######## here just go over the itemized data and print out a line
     pdf.set_font('Times', 'B', 10)
     pdf.cell(100, 8, 'Meter Name', 1, 0, 'L')
-    pdf.cell(60, 8, 'Units Consumed', 1, 0, 'R')
-    pdf.cell(30, 8, 'Price', 1, 1, 'R')
+    pdf.cell(55, 8, 'Units Consumed', 1, 0, 'R')
+    pdf.cell(35, 8, 'Price', 1, 1, 'R')
     pdf.set_font('Courier', 'I', 10)
     for key in data['itemized-data'].keys():
         item = data['itemized-data'][key]
         pdf.cell(100, 8, str(item['name']), 0, 0, 'L')
-        pdf.cell(60, 8, str(item['value']), 0, 0, 'R')
-        pdf.cell(30, 8, str(item['price']), 0, 1, 'R')
+        pdf.cell(55, 8, str(format(item['value'],'.2f')), 0, 0, 'R')
+        pdf.cell(35, 8, str(round(item['price'],2)), 0, 1, 'R')
+    pdf.set_font('Times', '', 9)
+    if str(data['unit'])=='0.01':
+        pdf.cell(190,7,'* P r i c e s  p e r   u n i t   a r e   i n   c e n t s',0,1,'L')
     pdf.set_font('Times', 'B', 10)
-    pdf.cell(160, 8, 'Total Amount Due', 1, 0, 'L')
-    pdf.cell(30, 8, str(data['amount-due']), 1, 1, 'R')
+    pdf.cell(155, 8, 'Total Amount Due', 1, 0, 'L')
+    pdf.cell(25, 8, str(round(data['amount-due'],2)), 'T B L', 0, 'R')
+    pdf.cell(10,8,str(data['currency']),'T B R',1,'L')
     ############################
     pdf.ln(30)
     pdf.section_title('Important Dates')
@@ -132,9 +139,15 @@ def generate_pdf(data):
     pdf.section_title('Additional Notes')
     pdf.set_font('Times', '', 9)
     pdf.section_body(data['notes'])
-    pdf.output(fileName, 'F')
+    tmp_path=os.path.join(os.path.dirname( __file__ ), '..','..')
+    if not os.path.exists(tmp_path+"/tmp/cyclops/generated-bills/"):
+        os.makedirs(tmp_path+"/tmp/cyclops/generated-bills/")
+    file_path=tmp_path+"/tmp/cyclops/generated-bills/"+fileName
+    pdf.output(name=file_path, dest='F')
     print fileName
-    return True
+    
+    return file_path
+
 
 def main(argv):
     now = datetime.datetime.now()
@@ -156,8 +169,8 @@ def main(argv):
     data['user-name'] = 'Patrik Eschel'
     data['user-address-1'] = 'Team-IAMP, Technikumstrasse 9'
     data['user-address-2'] = '8400 Winterthur, Switzerland'
-    data['bill-month'] = one_month_ago.strftime("%B")
-    data['bill-year'] = now.year
+    data['bill-start'] = one_month_ago.strftime("%B")
+    data['bill-end'] = now.year
     data['itemized-data'] = {}
     #each itemized entry must have 3 parts: meter-name, meter-value (with unit), item price
     data['itemized-data'][0] = {}
