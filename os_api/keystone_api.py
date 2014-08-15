@@ -161,6 +161,7 @@ def get_token_v3(uri,web,**kwargs):
     
     server_response = json_header["status"]
     auth_data["server-response"] = server_response
+    #print server_response
     if server_response not in {'201'}:
         print "Inside get_token_v3(): Something went wrong!"
         return False, auth_data
@@ -173,7 +174,7 @@ def get_token_v3(uri,web,**kwargs):
         auth_data["user-id"] = data["token"]["user"]["id"]
         for i in range(len(data["token"]["catalog"])):
             catalog_element =  data["token"]["catalog"][i]
-            auth_data[catalog_element["type"]] = catalog_element["endpoints"][0]["url"]
+            auth_data[catalog_element["type"]] = catalog_element["endpoints"][2]["url"]
     return True, auth_data 
 
 def get_list_tenants(token,api_endpoint):

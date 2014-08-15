@@ -1,10 +1,12 @@
-#! /usr/local/bin/python
+#!/bin/bash
 
 sudo apt-get update
 
 sudo apt-get install -y python-pip
 
-sudo apt-get install python-django
+sudo apt-get install -y python-django
+
+sudo apt-get install -y python-setuptools
 
 easy_install fpdf
 
@@ -16,9 +18,9 @@ pip install httplib2
 
 pip install South
 
-sudo apt-get install python2.7-mysqldb
+sudo apt-get install -y python2.7-mysqldb
 
-sudo apt-get install mysql-server
+sudo apt-get install -y mysql-server
 
 mysqladmin create db_cyclops
 
